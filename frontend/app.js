@@ -301,17 +301,38 @@ function toggleMobilePanel() {
   panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
 }
 
-function showMobileQR() {
-  const pcIP = window.location.hostname;
-  const pcPort = window.location.port || '8000';
-  const apiUrl = `http://${pcIP}:${pcPort}`;
-  const mobilePageUrl = `https://kausynew-afk.github.io/ai-reel-mobile/?api=${encodeURIComponent(apiUrl)}`;
+async function startTunnel() {
+  showStatus('tunnel-status', 'Starting secure tunnel...', 'info');
+  document.getElementById('tunnel-start-btn').disabled = true;
+  try {
+    const resp = await fetch('/api/tunnel/start', { method: 'POST' });
+    const data = await resp.json();
+    if (!resp.ok) throw new Error(data.detail || 'Failed');
 
-  document.getElementById('qr-img').src =
-    `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(mobilePageUrl)}`;
-  document.getElementById('mobile-url-text').textContent = mobilePageUrl;
-  document.getElementById('qr-box').style.display = 'block';
-  showStatus('mobile-status', `Your PC API: ${apiUrl} — Scan QR with your phone (same WiFi)`, 'success');
+    const url = data.url;
+    document.getElementById('tunnel-url').href = url;
+    document.getElementById('tunnel-url').textContent = url;
+    document.getElementById('qr-img').src =
+      `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(url)}`;
+    document.getElementById('qr-box').style.display = 'block';
+    document.getElementById('tunnel-start-btn').style.display = 'none';
+    document.getElementById('tunnel-stop-btn').style.display = 'inline-flex';
+    showStatus('tunnel-status', 'Tunnel active! Scan QR code with your phone.', 'success');
+  } catch (e) {
+    showStatus('tunnel-status', `Error: ${e.message}`, 'error');
+    document.getElementById('tunnel-start-btn').disabled = false;
+  }
+}
+
+async function stopTunnel() {
+  try {
+    await fetch('/api/tunnel/stop', { method: 'DELETE' });
+    document.getElementById('qr-box').style.display = 'none';
+    document.getElementById('tunnel-start-btn').style.display = 'inline-flex';
+    document.getElementById('tunnel-start-btn').disabled = false;
+    document.getElementById('tunnel-stop-btn').style.display = 'none';
+    hideStatus('tunnel-status');
+  } catch (e) { /* ignore */ }
 }
 
 // ── Init ──
