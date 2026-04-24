@@ -65,6 +65,9 @@ def _parse_llm_response(raw: str) -> dict:
         }
 
 
+GEMINI_MODELS = ["gemini-2.5-flash", "gemini-2.0-flash", "gemini-2.0-flash-lite"]
+
+
 async def _generate_with_gemini(topic: str, tone: str, duration_sec: int) -> dict:
     try:
         import google.generativeai as genai
@@ -73,13 +76,23 @@ async def _generate_with_gemini(topic: str, tone: str, duration_sec: int) -> dic
 
     api_key = _get_gemini_key()
     genai.configure(api_key=api_key)
-    model = genai.GenerativeModel("gemini-1.5-flash")
 
     prompt = _build_user_prompt(topic, tone, duration_sec)
-    response = await asyncio.to_thread(
-        model.generate_content, f"{SYSTEM_PROMPT}\n\n{prompt}"
-    )
-    return _parse_llm_response(response.text)
+    full_prompt = f"{SYSTEM_PROMPT}\n\n{prompt}"
+
+    last_error = None
+    for model_name in GEMINI_MODELS:
+        try:
+            model = genai.GenerativeModel(model_name)
+            response = await asyncio.to_thread(model.generate_content, full_prompt)
+            return _parse_llm_response(response.text)
+        except Exception as e:
+            last_error = e
+            if "429" in str(e) or "RESOURCE_EXHAUSTED" in str(e):
+                continue
+            raise
+
+    raise RuntimeError(f"All Gemini models exhausted. Last error: {last_error}")
 
 
 async def _generate_with_ollama(topic: str, tone: str, duration_sec: int) -> dict:
