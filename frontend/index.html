@@ -21,18 +21,16 @@
   <div class="card" style="max-width:420px; margin:0 auto 16px; text-align:center;">
     <h2 style="font-size:15px;">Open on Mobile</h2>
     <p style="font-size:12px; color:var(--text-dim); margin-bottom:12px;">
-      Creates a secure tunnel -- scan the QR code with your phone camera.
+      Scan the QR code with your phone camera to open the mobile app.<br/>
+      Both devices must be on the same WiFi network.
     </p>
     <div class="actions" style="justify-content:center; margin-bottom:12px;">
-      <button class="btn btn-primary btn-sm" id="tunnel-start-btn" onclick="startTunnel()">Start Tunnel</button>
-      <button class="btn btn-outline btn-sm" id="tunnel-stop-btn" onclick="stopTunnel()" style="display:none;">Stop Tunnel</button>
+      <button class="btn btn-primary btn-sm" onclick="showMobileQR()">Generate QR Code</button>
     </div>
-    <div class="status-bar" id="tunnel-status"></div>
+    <div class="status-bar" id="mobile-status"></div>
     <div id="qr-box" style="display:none; margin-top:14px;">
       <img id="qr-img" style="width:200px; height:200px; border-radius:8px; background:white; padding:8px;" />
-      <p style="margin-top:8px;">
-        <a id="tunnel-url" href="#" target="_blank" style="color:var(--accent-glow); font-size:13px; word-break:break-all;"></a>
-      </p>
+      <p style="margin-top:8px; font-size:13px; color:var(--accent-glow); word-break:break-all;" id="mobile-url-text"></p>
     </div>
   </div>
 </div>
