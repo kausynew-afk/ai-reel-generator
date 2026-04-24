@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI Reel Generator</title>
+  <link rel="stylesheet" href="/static/styles.css" />
+</head>
+<body>
+
+<div class="header">
+  <h1>AI Reel Generator</h1>
+  <p>Create viral YouTube &amp; Instagram Reels in minutes</p>
+  <button class="btn btn-outline btn-sm" style="margin-top:10px;" onclick="toggleMobilePanel()">
+    Open on Mobile
+  </button>
+</div>
+
+<!-- Mobile Access Panel -->
+<div id="mobile-panel" style="display:none;">
+  <div class="card" style="max-width:420px; margin:0 auto 16px; text-align:center;">
+    <h2 style="font-size:15px;">Open on Mobile</h2>
+    <p style="font-size:12px; color:var(--text-dim); margin-bottom:12px;">
+      Creates a secure tunnel -- scan the QR code with your phone camera.
+    </p>
+    <div class="actions" style="justify-content:center; margin-bottom:12px;">
+      <button class="btn btn-primary btn-sm" id="tunnel-start-btn" onclick="startTunnel()">Start Tunnel</button>
+      <button class="btn btn-outline btn-sm" id="tunnel-stop-btn" onclick="stopTunnel()" style="display:none;">Stop Tunnel</button>
+    </div>
+    <div class="status-bar" id="tunnel-status"></div>
+    <div id="qr-box" style="display:none; margin-top:14px;">
+      <img id="qr-img" style="width:200px; height:200px; border-radius:8px; background:white; padding:8px;" />
+      <p style="margin-top:8px;">
+        <a id="tunnel-url" href="#" target="_blank" style="color:var(--accent-glow); font-size:13px; word-break:break-all;"></a>
+      </p>
+    </div>
+  </div>
+</div>
+
+<!-- Stepper -->
+<div class="stepper" id="stepper">
+  <div class="step-indicator active" data-step="1" onclick="goToStep(1)">
+    <span class="num">1</span> Script
+  </div>
+  <div class="step-indicator" data-step="2" onclick="goToStep(2)">
+    <span class="num">2</span> Voice
+  </div>
+  <div class="step-indicator" data-step="3" onclick="goToStep(3)">
+    <span class="num">3</span> Avatar
+  </div>
+  <div class="step-indicator" data-step="4" onclick="goToStep(4)">
+    <span class="num">4</span> BGM
+  </div>
+  <div class="step-indicator" data-step="5" onclick="goToStep(5)">
+    <span class="num">5</span> Compose
+  </div>
+  <div class="step-indicator" data-step="6" onclick="goToStep(6)">
+    <span class="num">6</span> Finalize
+  </div>
+</div>
+
+<div class="main">
+
+  <!-- ════════ STEP 1: Script ════════ -->
+  <div class="step-panel active" id="step-1">
+    <div class="card">
+      <h2>Step 1 &mdash; Generate Script</h2>
+
+      <div class="form-group">
+        <label>Topic / Idea</label>
+        <input type="text" id="topic" placeholder="e.g., Indian parents and WiFi password drama" />
+      </div>
+
+      <div class="form-row">
+        <div>
+          <label>Tone</label>
+          <div class="chip-group" id="tone-chips">
+            <span class="chip active" data-val="comedy">Comedy</span>
+            <span class="chip" data-val="motivational">Motivational</span>
+            <span class="chip" data-val="educational">Educational</span>
+            <span class="chip" data-val="dramatic">Dramatic</span>
+            <span class="chip" data-val="roast">Roast</span>
+            <span class="chip" data-val="storytelling">Storytelling</span>
+          </div>
+        </div>
+        <div>
+          <label>Duration (seconds)</label>
+          <input type="range" id="duration" min="15" max="90" value="30" oninput="document.getElementById('dur-val').textContent=this.value+'s'" />
+          <div class="range-value" id="dur-val">30s</div>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div>
+          <label>AI Provider</label>
+          <select id="provider">
+            <option value="gemini">Google Gemini (Free)</option>
+            <option value="ollama">Ollama (Local)</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="actions">
+        <button class="btn btn-primary" onclick="generateScript()">
+          Generate Script
+        </button>
+      </div>
+      <div class="status-bar" id="script-status"></div>
+
+      <div id="script-result" style="display:none; margin-top:16px;">
+        <label>Generated Script (edit as needed)</label>
+        <textarea id="script-text" rows="8"></textarea>
+        <div style="margin-top:8px; font-size:12px; color:var(--text-dim);">
+          Title: <strong id="script-title"></strong> &nbsp;|&nbsp;
+          Caption: <span id="script-caption"></span>
+        </div>
+        <div class="actions">
+          <button class="btn btn-success" onclick="acceptScript()">Accept &amp; Continue</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════ STEP 2: Voice ════════ -->
+  <div class="step-panel" id="step-2">
+    <div class="card">
+      <h2>Step 2 &mdash; Generate Voiceover</h2>
+
+      <div class="form-group">
+        <label>Script Text</label>
+        <textarea id="voice-script" rows="6" readonly></textarea>
+      </div>
+
+      <div class="form-row">
+        <div>
+          <label>Voice</label>
+          <select id="voice-select">
+            <option value="hi-IN-MadhurNeural">Hindi Male (Madhur)</option>
+            <option value="hi-IN-SwaraNeural">Hindi Female (Swara)</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="actions">
+        <button class="btn btn-outline" onclick="goToStep(1)">Back</button>
+        <button class="btn btn-primary" onclick="generateVoice()">
+          Generate Voice
+        </button>
+      </div>
+      <div class="status-bar" id="voice-status"></div>
+
+      <div class="preview-box" id="voice-preview" style="display:none;">
+        <p style="font-size:13px; color:var(--text-dim);">Preview Voiceover</p>
+        <audio id="voice-audio" controls></audio>
+        <div class="actions" style="justify-content:center;">
+          <button class="btn btn-outline btn-sm" onclick="generateVoice()">Regenerate</button>
+          <button class="btn btn-success" onclick="goToStep(3)">Accept &amp; Continue</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════ STEP 3: Avatar ════════ -->
+  <div class="step-panel" id="step-3">
+    <div class="card">
+      <h2>Step 3 &mdash; Generate Avatar Video</h2>
+
+      <div class="form-group">
+        <label>Avatar Mode</label>
+        <div class="chip-group" id="avatar-mode-chips">
+          <span class="chip active" data-val="animated">Animated Character</span>
+          <span class="chip" data-val="realistic">Realistic (SadTalker)</span>
+          <span class="chip" data-val="lipsync">Photo Lip-Sync (Wav2Lip)</span>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Choose Avatar Preset</label>
+        <div class="avatar-grid" id="avatar-grid"></div>
+      </div>
+
+      <div class="form-group">
+        <label>Or Upload Custom Image</label>
+        <input type="file" id="avatar-upload" accept="image/*" style="color:var(--text-dim);" />
+      </div>
+
+      <div class="actions">
+        <button class="btn btn-outline" onclick="goToStep(2)">Back</button>
+        <button class="btn btn-primary" onclick="generateAvatar()">
+          Generate Avatar Video
+        </button>
+      </div>
+      <div class="status-bar" id="avatar-status"></div>
+
+      <div class="preview-box" id="avatar-preview" style="display:none;">
+        <p style="font-size:13px; color:var(--text-dim);">Avatar Video Preview</p>
+        <video id="avatar-video" controls></video>
+        <div class="actions" style="justify-content:center;">
+          <button class="btn btn-outline btn-sm" onclick="generateAvatar()">Regenerate</button>
+          <button class="btn btn-success" onclick="goToStep(4)">Accept &amp; Continue</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════ STEP 4: BGM ════════ -->
+  <div class="step-panel" id="step-4">
+    <div class="card">
+      <h2>Step 4 &mdash; Background Music</h2>
+
+      <div class="form-group">
+        <label>Music Category</label>
+        <div class="chip-group" id="bgm-chips">
+          <span class="chip active" data-val="comedy">Comedy</span>
+          <span class="chip" data-val="motivational">Motivational</span>
+          <span class="chip" data-val="dramatic">Dramatic</span>
+          <span class="chip" data-val="chill">Chill</span>
+          <span class="chip" data-val="action">Action</span>
+          <span class="chip" data-val="romantic">Romantic</span>
+        </div>
+      </div>
+
+      <div class="actions">
+        <button class="btn btn-outline" onclick="goToStep(3)">Back</button>
+        <button class="btn btn-primary" onclick="selectBGM()">
+          Apply BGM
+        </button>
+      </div>
+      <div class="status-bar" id="bgm-status"></div>
+
+      <div class="preview-box" id="bgm-preview" style="display:none;">
+        <p style="font-size:13px; color:var(--text-dim);">BGM Preview</p>
+        <audio id="bgm-audio" controls></audio>
+        <div class="actions" style="justify-content:center;">
+          <button class="btn btn-outline btn-sm" onclick="selectBGM()">Change Track</button>
+          <button class="btn btn-success" onclick="goToStep(5)">Accept &amp; Continue</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════ STEP 5: Compose ════════ -->
+  <div class="step-panel" id="step-5">
+    <div class="card">
+      <h2>Step 5 &mdash; Compose Video</h2>
+
+      <div class="form-group">
+        <label>
+          <input type="checkbox" id="add-captions" checked />
+          Add animated captions
+        </label>
+      </div>
+      <div class="form-group">
+        <label>Caption Style</label>
+        <select id="caption-style">
+          <option value="word_highlight">Word-by-word (TikTok style)</option>
+          <option value="single_word">Single word flash</option>
+        </select>
+      </div>
+
+      <div class="actions">
+        <button class="btn btn-outline" onclick="goToStep(4)">Back</button>
+        <button class="btn btn-primary" onclick="composeVideo()">
+          Compose Video
+        </button>
+      </div>
+      <div class="status-bar" id="compose-status"></div>
+
+      <div class="preview-box" id="compose-preview" style="display:none;">
+        <p style="font-size:13px; color:var(--text-dim);">Composed Video Preview</p>
+        <video id="composed-video" controls></video>
+        <div class="actions" style="justify-content:center;">
+          <button class="btn btn-success" onclick="goToStep(6)">Continue to Finalize</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════ STEP 6: Finalize ════════ -->
+  <div class="step-panel" id="step-6">
+    <div class="card">
+      <h2>Step 6 &mdash; Finalize &amp; Download</h2>
+      <p style="font-size:13px; color:var(--text-dim); margin-bottom:16px;">
+        Apply anti-detection post-processing: film grain, color shifts, audio naturalization, and metadata cleanup.
+      </p>
+
+      <div class="form-group">
+        <label>Film Grain Intensity</label>
+        <input type="range" id="grain" min="0" max="0.05" step="0.005" value="0.02"
+               oninput="document.getElementById('grain-val').textContent=parseFloat(this.value).toFixed(3)" />
+        <div class="range-value" id="grain-val">0.020</div>
+      </div>
+      <div class="form-group">
+        <label>
+          <input type="checkbox" id="room-tone" checked />
+          Add ambient room tone (natural audio)
+        </label>
+      </div>
+
+      <div class="actions">
+        <button class="btn btn-outline" onclick="goToStep(5)">Back</button>
+        <button class="btn btn-primary" onclick="finalizeVideo()">
+          Finalize Reel
+        </button>
+      </div>
+      <div class="status-bar" id="final-status"></div>
+
+      <div class="preview-box" id="final-preview" style="display:none;">
+        <p style="font-size:13px; color:var(--success); font-weight:600;">Your reel is ready!</p>
+        <video id="final-video" controls></video>
+        <div class="actions" style="justify-content:center; margin-top:12px;">
+          <a id="download-link" class="btn btn-success" download>
+            Download Final Reel
+          </a>
+          <button class="btn btn-outline" onclick="startNew()">Create Another</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script src="/static/app.js"></script>
+</body>
+</html>

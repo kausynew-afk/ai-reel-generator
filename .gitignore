@@ -1,0 +1,15 @@
+__pycache__/
+*.pyc
+*.pyo
+.env
+.gemini_key
+output/
+backend/models/
+backend/assets/bgm/*.wav
+backend/assets/bgm/*.mp3
+*.egg-info/
+dist/
+build/
+.idea/
+.vscode/
+*.log
