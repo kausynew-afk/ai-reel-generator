@@ -18,6 +18,23 @@ RATE_MIN, RATE_MAX = -8, +12
 PITCH_MIN, PITCH_MAX = -15, +10
 
 
+def _clean_for_speech(text: str) -> str:
+    """Strip everything a TTS engine should never read aloud."""
+    text = re.sub(r"```[\s\S]*?```", "", text)
+    text = re.sub(r"`[^`]*`", "", text)
+    text = re.sub(r"\{[\s\S]*?\}", "", text)
+    text = re.sub(r"\[.*?\]", "", text)
+    text = re.sub(r"#\S+", "", text)
+    text = re.sub(r"@\S+", "", text)
+    text = re.sub(r"https?://\S+", "", text)
+    text = re.sub(r"[*_~|<>{}()\[\]\"\\/#^=+]", "", text)
+    text = re.sub(r"\b\d{3,}\b", "", text)
+    text = re.sub(r"[^\w\s।,.!?…:\-\u0900-\u097F]", "", text)
+    text = re.sub(r"[ \t]+", " ", text)
+    text = re.sub(r"\n{2,}", "\n", text)
+    return text.strip()
+
+
 def _split_sentences(text: str) -> List[str]:
     """Split text into sentences, keeping Hindi punctuation."""
     parts = re.split(r"(?<=[।.!?।\n])\s*", text)
@@ -66,6 +83,7 @@ class VoiceGenerator:
         audio_path = output_dir / "voiceover.mp3"
         subs_path = output_dir / "subtitles.json"
 
+        text = _clean_for_speech(text)
         sentences = _split_sentences(text)
         ssml = _build_ssml(sentences)
 
