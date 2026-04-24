@@ -70,6 +70,7 @@ async def generate_script(
 async def generate_voice(
     script: str = Form(...),
     voice: str = Form("hi-IN-MadhurNeural"),
+    genre: str = Form("comedy"),
     session_id: str = Form(None),
 ):
     sid = session_id or str(uuid.uuid4())
@@ -77,7 +78,7 @@ async def generate_voice(
     session_dir.mkdir(exist_ok=True)
     try:
         result = await voice_gen.generate(
-            text=script, voice=voice, output_dir=session_dir
+            text=script, voice=voice, output_dir=session_dir, genre=genre
         )
         result["session_id"] = sid
         return JSONResponse(result)
